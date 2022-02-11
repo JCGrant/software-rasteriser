@@ -1,11 +1,12 @@
 import { v } from "./math.js";
-import { Renderer } from "./draw.js";
+import { Camera, Renderer } from "./draw.js";
 import { Transform } from "./transform.js";
 
 const width = 800;
 const height = 600;
 const canvas = document.getElementById("canvas");
-const renderer = new Renderer(canvas, width, height);
+const camera = new Camera();
+const renderer = new Renderer(canvas, width, height, camera);
 
 const cubeTriangles = [
   [v(0.0, 0.0, 0.0), v(0.0, 1.0, 0.0), v(1.0, 1.0, 0.0)],

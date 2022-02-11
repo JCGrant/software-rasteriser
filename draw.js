@@ -1,17 +1,32 @@
 import { v, m, toRadians } from "./math.js";
+import { Transform } from "./transform.js";
+
+export class Camera {
+  #transform;
+  constructor(transform = undefined) {
+    this.#transform = transform ?? Transform.identity();
+  }
+
+  position() {
+    const [x, y, z] = this.#transform.apply(v(0, 0, 0, 1)).toArray();
+    return v(x, y, z);
+  }
+}
 
 export class Renderer {
   #width;
   #height;
+  #camera;
   #ctx;
   #meshes;
   #projectionMatrix;
 
-  constructor(canvas, width, height) {
+  constructor(canvas, width, height, camera) {
     canvas.width = width;
     canvas.height = height;
     this.#width = width;
     this.#height = height;
+    this.#camera = camera;
     this.#ctx = canvas.getContext("2d");
     this.#meshes = [];
 
@@ -38,16 +53,25 @@ export class Renderer {
     this.#clear();
     for (const mesh of this.#meshes) {
       for (const t of mesh.triangles) {
-        this.#drawTriangle(
-          t.map((point) => {
-            const transformedPoint = mesh.transform.apply(point);
-            const projectedPoint = this.#project(transformedPoint);
-            const scaledPoint = projectedPoint
-              .add(v(1.0, 1.0, 0.0))
-              .hadamard(v(0.5 * this.#width, 0.5 * this.#height, 0));
-            return scaledPoint;
-          })
+        const transformedTriangle = t.map((point) =>
+          mesh.transform.apply(point)
         );
+        const [p1, p2, p3] = transformedTriangle;
+        const line1 = p2.subtract(p1);
+        const line2 = p3.subtract(p1);
+        const normal = line1.cross(line2).normalised();
+
+        if (normal.dot(p1.subtract(this.#camera.position())) < 0) {
+          this.#drawTriangle(
+            transformedTriangle.map((transformedPoint) => {
+              const projectedPoint = this.#project(transformedPoint);
+              const scaledPoint = projectedPoint
+                .add(v(1.0, 1.0, 0.0))
+                .hadamard(v(0.5 * this.#width, 0.5 * this.#height, 0));
+              return scaledPoint;
+            })
+          );
+        }
       }
     }
   }

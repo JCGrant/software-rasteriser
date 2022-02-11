@@ -28,12 +28,25 @@ export class Vector {
     return this.#xs.reduce((acc, x, i) => acc + x * vector.get(i), 0);
   }
 
+  cross(vector) {
+    if (this.size() !== 3 || vector.size() !== 3) {
+      throw Error("Cross Product can only be applied to 3D Vectors");
+    }
+    const [v1, v2, v3] = this.toArray();
+    const [w1, w2, w3] = vector.toArray();
+    return v(v2 * w3 - v3 * w2, v3 * w1 - v1 * w3, v1 * w2 - v2 * w1);
+  }
+
   hadamard(vector) {
     return new Vector(this.#xs.map((x, i) => x * vector.get(i)));
   }
 
   length() {
     return Math.sqrt(this.dot(this));
+  }
+
+  size() {
+    return this.#xs.length;
   }
 
   normalised() {
