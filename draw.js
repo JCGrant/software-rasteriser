@@ -59,10 +59,20 @@ export class Renderer {
   render() {
     this.#clear();
     for (const mesh of this.#meshes) {
-      for (const t of mesh.triangles) {
-        const transformedTriangle = t.map((point) =>
-          mesh.transform.apply(point)
-        );
+      const transformedTriangles = mesh.triangles
+        .map((t) => {
+          const transformedTriangle = t.map((point) =>
+            mesh.transform.apply(point)
+          );
+          return transformedTriangle;
+        })
+        .sort((t1, t2) => {
+          const z1 = (t1[0].get(2) + t1[1].get(2) + t1[2].get(2)) / 3.0;
+          const z2 = (t2[0].get(2) + t2[1].get(2) + t2[2].get(2)) / 3.0;
+          return z2 - z1;
+        });
+
+      for (const transformedTriangle of transformedTriangles) {
         const [p1, p2, p3] = transformedTriangle;
         const line1 = p2.subtract(p1);
         const line2 = p3.subtract(p1);

@@ -39,6 +39,39 @@ for (let i = 0; i < 12; i++) {
   );
 }
 
+const shipMesh = await fetch("./ship.obj")
+  .then((res) => res.text())
+  .then((text) => {
+    const lines = text.split("\n");
+    const vertices = [];
+    const triangles = [];
+    for (const line of lines) {
+      if (line[0] === "v") {
+        const coords = line
+          .slice(2)
+          .split(" ")
+          .map((x) => parseFloat(x));
+        const vertex = v(...coords);
+        vertices.push(vertex);
+      }
+      if (line[0] === "f") {
+        const triangle = line
+          .slice(2)
+          .split(" ")
+          .map((x) => parseInt(x) - 1)
+          .map((index) => vertices[index])
+          .map((vertex) => vertex.toArray())
+          .map(([x, y, z]) => v(x, -y, -z));
+        triangles.push(triangle);
+      }
+    }
+    return renderer.add_mesh({
+      triangles,
+      transform: Transform.identity(),
+      color: Math.floor(Math.random() * 16777215).toString(16),
+    });
+  });
+
 renderer.add_light(v(0.0, 0.0, -1.0));
 
 let time = 0.0;
@@ -52,6 +85,16 @@ const update = () => {
           Math.sin((2 * Math.PI * i) / 12) * 3,
           Math.cos((2 * Math.PI * i) / 12) * 3,
           5
+        )
+      );
+    shipMesh.transform = Transform.identity()
+      .rotateZ(time)
+      .rotateX(time / 2)
+      .translate(
+        v(
+          Math.sin((2 * Math.PI * i) / 12) * 3,
+          Math.cos((2 * Math.PI * i) / 12) * 3,
+          10
         )
       );
   }
